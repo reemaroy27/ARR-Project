@@ -199,17 +199,43 @@ print(
 # Remaining Unmatched Companies
 # =====================================================
 
+# =====================================================
+# Remaining Unmatched Companies
+# =====================================================
+
 print("\n===== UNMATCHED COMPANIES =====\n")
 
-unmatched = sorted(
+unmatched_companies = (
     df[
         df["founded_year"].isna()
-    ]["company_name"]
-    .dropna()
-    .unique()
+    ][["company_name"]]
+    .drop_duplicates()
+    .sort_values("company_name")
 )
 
-print(unmatched)
+print(
+    unmatched_companies["company_name"]
+    .tolist()
+)
+
+# Export unmatched companies
+
+unmatched_output = (
+    PROJECT_ROOT
+    / "data"
+    / "gold"
+    / "unmatched_companies.csv"
+)
+
+unmatched_companies.to_csv(
+    unmatched_output,
+    index=False
+)
+
+print(
+    f"Unmatched companies saved to: "
+    f"{unmatched_output}"
+)
 
 
 # =====================================================

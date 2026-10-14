@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import duckdb
 import pandas as pd
 
 
@@ -218,3 +218,54 @@ print(dim_article["article_id"].nunique())
 print(len(dim_article))
 print(fact_arr["observation_id"].nunique())
 print(len(fact_arr))
+
+# =====================================================
+# CREATE DUCKDB WAREHOUSE
+# =====================================================
+
+duckdb_path = (
+    PROJECT_ROOT
+    / "data"
+    / "gold"
+    / "warehouse.duckdb"
+)
+
+conn = duckdb.connect(
+    str(duckdb_path)
+)
+
+conn.register(
+    "dim_company_df",
+    dim_company
+)
+
+conn.register(
+    "dim_article_df",
+    dim_article
+)
+
+conn.register(
+    "fact_arr_df",
+    fact_arr
+)
+
+conn.execute("""
+CREATE OR REPLACE TABLE dim_company AS
+SELECT * FROM dim_company_df
+""")
+
+conn.execute("""
+CREATE OR REPLACE TABLE dim_article AS
+SELECT * FROM dim_article_df
+""")
+
+conn.execute("""
+CREATE OR REPLACE TABLE fact_arr_observation AS
+SELECT * FROM fact_arr_df
+""")
+
+conn.close()
+
+print(
+    f"DuckDB warehouse created: {duckdb_path}"
+)

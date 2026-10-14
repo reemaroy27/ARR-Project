@@ -1,6 +1,6 @@
 import pandas as pd
 
-def parse_date(date_value):
+def parse_date(date_value: str) -> pd.Timestamp:
 
     if pd.isna(date_value):
         return pd.NaT

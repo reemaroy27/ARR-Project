@@ -42,7 +42,11 @@ print(f"Rows Loaded: {len(df)}")
 # =====================================================
 
 ai_articles = df[
-    (df["category_standardized"] == "AI_ML")
+    (
+        (df["category_standardized"] == "AI_ML")
+        |
+        (df["industry"] == "AI/ML")
+    )
     & (df["year"] >= 2022)
     & (df["year"] <= 2024)
     & (df["arr_usd"] > 50_000_000)
@@ -109,9 +113,22 @@ print(
             "article_id",
             "company_name",
             "category_standardized",
-            "arr_usd"
+            "arr_usd",
+            "industry"
         ]
     ].head(10)
+)
+# ADD THIS
+
+print("\n===== OUTPUT COLUMNS =====\n")
+
+print(ai_articles.columns.tolist())
+
+print("\n===== INDUSTRY DISTRIBUTION =====\n")
+
+print(
+    ai_articles["industry"]
+    .value_counts(dropna=False)
 )
 
 print(

@@ -1,5 +1,6 @@
 import re
 import pandas as pd
+from typing import Optional
 
 from config.constants import (
     CURRENCY_RATES,
@@ -24,7 +25,7 @@ def detect_currency(value):
     return "USD"
 
 
-def parse_revenue(value):
+def parse_revenue(value: str) -> Optional[int]:
     """
     Convert revenue formats into USD integer values.
     """
