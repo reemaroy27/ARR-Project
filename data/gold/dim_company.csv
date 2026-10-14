@@ -1,0 +1,27 @@
+company_key,company_name,industry,headquarters,employee_count,founded_year,is_public,stock_ticker,company_size_category
+1,Airbnb,Data Analytics,"London, UK",19967.0,1999.0,False,,Medium
+2,Amazon Web Services,SaaS,"Berlin, Germany",27826.0,2015.0,False,,Medium
+3,Anthropic,FinTech,"San Francisco, CA",43747.0,2006.0,False,,Large
+4,Cloudflare,Cybersecurity,"Austin, TX",4422.0,1998.0,False,CLOU,Small
+5,Cohere,,,,,,,
+6,Confluent,Cloud Computing,"London, UK",3884.0,1995.0,False,,Small
+7,DataRobot,Cloud Computing,"New York, NY",23471.0,2012.0,True,,Medium
+8,Databricks,Data Analytics,"Berlin, Germany",17962.0,2003.0,True,DATA,Medium
+9,Elastic,Cybersecurity,"San Francisco, CA",24508.0,2016.0,True,ELAS,Medium
+10,Google DeepMind,Data Analytics,"Austin, TX",24274.0,2017.0,False,,Medium
+11,Hugging Face,,,,,,,
+12,Meta AI,Data Analytics,"Seattle, WA",20240.0,2001.0,True,,Medium
+13,Microsoft,Data Analytics,"Austin, TX",48646.0,2018.0,False,,Large
+14,Mistral AI,,,,,,,
+15,MongoDB,SaaS,"Austin, TX",16952.0,2008.0,False,MONG,Medium
+16,NVIDIA,AI/ML,"London, UK",22031.0,2017.0,False,,Medium
+17,OpenAI,Data Analytics,"Austin, TX",12793.0,2006.0,False,OPEN,Medium
+18,Palantir,Cloud Computing,"Berlin, Germany",42306.0,2005.0,True,,Large
+19,Perplexity AI,,,,,,,
+20,Scale AI,AI/ML,"Berlin, Germany",23379.0,2003.0,False,,Medium
+21,Snowflake,Cloud Computing,"London, UK",49545.0,2012.0,True,,Large
+22,SpaceX,AI/ML,"Berlin, Germany",31018.0,2016.0,False,,Large
+23,Stripe,Data Analytics,"Seattle, WA",36348.0,2002.0,True,STRI,Large
+24,Tesla,Cloud Computing,"London, UK",5691.0,2008.0,True,,Small
+25,Uber,FinTech,"San Francisco, CA",10144.0,2015.0,False,UBER,Medium
+26,xAI,,,,,,,

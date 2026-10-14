@@ -1,0 +1,13 @@
+pandas
+numpy
+
+scikit-learn
+
+sentence-transformers
+transformers
+huggingface-hub
+torch
+
+duckdb
+
+tqdm
