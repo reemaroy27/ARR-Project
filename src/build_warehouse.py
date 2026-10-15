@@ -115,7 +115,8 @@ print(
 
 fact_arr = (
 
-    df[
+    df.loc[
+        df["arr_usd"].notna(),
         [
             "article_id",
             "company_name",

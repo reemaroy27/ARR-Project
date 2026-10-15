@@ -1,4 +1,4 @@
-article_id,title,company_name,published_date_std,category_standardized,arr_usd,summary,url,industry,founded_year,headquarters,employee_count,is_public,stock_ticker,company_age,company_size_category
+article_id,title,company_name,published_date,category,arr_usd,summary,url,industry,founded_year,headquarters,employee_count,is_public,stock_ticker,company_age,company_size_category
 ART0614,Google Deepmind Expands into European Market,Google DeepMind,2024-12-19,AI_ML,1215000000.0,New product features leverage cutting-edge AI technology to solve customer problems.,https://technews.example.com/articles/614,Data Analytics,2017.0,"Austin, TX",24274.0,False,,7.0,Medium
 ART0691,Mistral AI Raises Series D Funding Round,Mistral AI,2024-12-13,AI_ML,260000000.0,Investors show strong confidence in the company's growth trajectory and market position.,https://technews.example.com/articles/691,,,,,,,,
 ART0734,The Boring Company / SpaceX Releases Open Source Framework,SpaceX,2024-12-12,FINTECH,9945000000.0,Financial results exceed analyst expectations across all key metrics.,https://technews.example.com/articles/734,AI/ML,2016.0,"Berlin, Germany",31018.0,False,,8.0,Large
