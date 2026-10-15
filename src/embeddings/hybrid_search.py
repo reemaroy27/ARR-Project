@@ -2,10 +2,8 @@ from pathlib import Path
 import ast
 
 import pandas as pd
-
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-
 
 # =====================================================
 # Paths
@@ -20,7 +18,6 @@ input_path = (
     / "ai_articles_with_embeddings.csv"
 )
 
-
 # =====================================================
 # Load Data
 # =====================================================
@@ -28,34 +25,35 @@ input_path = (
 df = pd.read_csv(input_path)
 
 # Convert embedding strings back into Python lists
+df["embedding"] = df["embedding"].apply(ast.literal_eval)
 
-df["embedding"] = (
-    df["embedding"]
-    .apply(ast.literal_eval)
+# Create year column from published_date
+df["published_date"] = pd.to_datetime(
+    df["published_date"],
+    errors="coerce"
 )
 
-print(f"Loaded {len(df)} articles")
+df["year"] = df["published_date"].dt.year
 
+print(f"Loaded {len(df)} articles")
+print("\nColumns:")
+print(df.columns.tolist())
 
 # =====================================================
 # Load Model
 # =====================================================
 
 model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
+    "sentence-transformers/all-MiniLM-L6-v2"
 )
 
 print("Model Loaded")
-
 
 # =====================================================
 # Hybrid Search
 # =====================================================
 
-def find_hybrid_articles(
-    query_text,
-    top_k=5
-):
+def find_hybrid_articles(query_text, top_k=5):
     """
     Hybrid Search:
     1. Apply business filters
@@ -64,26 +62,23 @@ def find_hybrid_articles(
 
     filtered_df = df[
         (
-            (df["category_standardized"] == "AI_ML")
-            |
-            (df["industry"] == "AI/ML")
+            (df["category"] == "AI_ML")
+            | (df["industry"] == "AI/ML")
         )
-        &
-        (df["year"] >= 2022)
-        &
-        (df["year"] <= 2024)
-        &
-        (df["arr_usd"] > 50_000_000)
+        & (df["year"] >= 2022)
+        & (df["year"] <= 2024)
+        & (df["arr_usd"].fillna(0) > 50_000_000)
     ].copy()
 
-    query_embedding = model.encode(
-        [query_text]
-    )
+    if filtered_df.empty:
+        print("No records match the filter criteria.")
+        return pd.DataFrame()
 
-    article_embeddings = (
-        filtered_df["embedding"]
-        .tolist()
-    )
+    query_embedding = model.encode([query_text])
+
+    article_embeddings = filtered_df[
+        "embedding"
+    ].tolist()
 
     scores = cosine_similarity(
         query_embedding,
@@ -97,8 +92,7 @@ def find_hybrid_articles(
         .sort_values(
             "similarity_score",
             ascending=False
-        )
-        [
+        )[
             [
                 "article_id",
                 "title",
@@ -110,7 +104,6 @@ def find_hybrid_articles(
         ]
         .head(top_k)
     )
-
 
 # =====================================================
 # Example Queries
@@ -127,15 +120,12 @@ if __name__ == "__main__":
 
     for query in queries:
 
-        print(
-            "\n"
-            + "=" * 60
-        )
-
+        print("\n" + "=" * 60)
         print(f"\nQUERY: {query}\n")
 
-        print(
-            find_hybrid_articles(
-                query
-            )
-        )
+        results = find_hybrid_articles(query)
+
+        if not results.empty:
+            print(results.to_string(index=False))
+        else:
+            print("No matching articles found.")
