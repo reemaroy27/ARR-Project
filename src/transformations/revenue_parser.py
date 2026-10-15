@@ -1,4 +1,6 @@
 import re
+from typing import Optional
+
 import pandas as pd
 
 from config.constants import (
@@ -7,35 +9,118 @@ from config.constants import (
 )
 
 
-def detect_currency(value):
+def get_parse_status(
+    raw_value,
+    parsed_value
+) -> str:
+    """
+    Determine revenue parse status.
+
+    SUCCESS:
+        Revenue successfully parsed.
+
+    MISSING:
+        Revenue unavailable, null, N/A,
+        Not disclosed, etc.
+
+    FAILED:
+        Revenue provided but could not
+        be parsed.
+    """
+
+    if pd.isna(raw_value):
+        return "MISSING"
+
+    normalized_invalids = {
+        str(v).strip().lower()
+        for v in INVALID_REVENUE_VALUES
+        if v is not None
+    }
+
+    if (
+        str(raw_value)
+        .strip()
+        .lower()
+        in normalized_invalids
+    ):
+        return "MISSING"
+
+    if pd.isna(parsed_value):
+        return "FAILED"
+
+    return "SUCCESS"
+
+
+def detect_currency(value: str) -> str:
     """
     Detect currency from revenue string.
     """
 
-    if "EUR" in value or "€" in value:
+    value_upper = value.upper()
+
+    if "EUR" in value_upper or "€" in value:
         return "EUR"
 
-    if "GBP" in value or "£" in value:
+    if "GBP" in value_upper or "£" in value:
         return "GBP"
 
-    if "JPY" in value or "¥" in value:
+    if "JPY" in value_upper or "¥" in value:
         return "JPY"
 
     return "USD"
 
 
-def parse_revenue(value):
+def extract_number(
+    value: str
+) -> Optional[float]:
     """
-    Convert revenue formats into USD integer values.
+    Extract first numeric value from text.
+
+    Examples:
+        "$5.2B" -> 5.2
+        "80.730 billion" -> 80.730
     """
 
-    # Null values
+    matches = re.findall(
+        r"\d+\.?\d*",
+        value
+    )
+
+    if not matches:
+        return None
+
+    return float(matches[0])
+
+
+def parse_revenue(
+    value: str
+) -> Optional[int]:
+    """
+    Convert revenue formats into USD integer values.
+
+    Supports:
+
+    - $980M
+    - $5.2B
+    - 500M USD
+    - $80.730 billion
+    - $455.0 million
+    - €1,254,545,455
+    - £244,094,488
+    - ¥360,000,000,000
+    - $90M - $100M
+    """
+
+    # ---------------------------------------
+    # Missing values
+    # ---------------------------------------
+
     if pd.isna(value):
         return None
 
-    # Fix encoding issues
     value = str(value).strip()
 
+    # Fix encoding issues
     value = (
         value
         .replace("â‚¬", "€")
@@ -43,22 +128,30 @@ def parse_revenue(value):
         .replace("Â¥", "¥")
     )
 
-    # Invalid values
-    if value in INVALID_REVENUE_VALUES:
+    normalized_invalids = {
+        str(v).strip().lower()
+        for v in INVALID_REVENUE_VALUES
+        if v is not None
+    }
+
+    if value.lower() in normalized_invalids:
         return None
 
     currency = detect_currency(value)
     fx_rate = CURRENCY_RATES[currency]
 
-    # -----------------------
-    # Range Values
-    # Example:
-    # $0.982B - $1.086B
-    # $57950.0M - $64050.0M
-    # -----------------------
+    value_upper = value.upper()
+
+    # ---------------------------------------
+    # Revenue ranges
+    # ---------------------------------------
+
     if "-" in value:
 
-        numbers = re.findall(r"\d+\.?\d*", value)
+        numbers = re.findall(
+            r"\d+\.?\d*",
+            value
+        )
 
         if len(numbers) >= 2:
 
@@ -67,81 +160,92 @@ def parse_revenue(value):
 
             midpoint = (low + high) / 2
 
-            if "B" in value:
+            if "B" in value_upper:
                 return int(
-                    midpoint * 1_000_000_000 * fx_rate
+                    midpoint *
+                    1_000_000_000 *
+                    fx_rate
                 )
 
-            if "M" in value:
+            if "M" in value_upper:
                 return int(
-                    midpoint * 1_000_000 * fx_rate
+                    midpoint *
+                    1_000_000 *
+                    fx_rate
                 )
 
-    # -----------------------
-    # Billion
-    # Example:
-    # $80.730 billion
-    # -----------------------
+    # ---------------------------------------
+    # Billion text
+    # ---------------------------------------
+
     if "billion" in value.lower():
 
-        number = float(
-            re.findall(r"\d+\.?\d*", value)[0]
-        )
+        number = extract_number(value)
+
+        if number is None:
+            return None
 
         return int(
-            number * 1_000_000_000 * fx_rate
+            number *
+            1_000_000_000 *
+            fx_rate
         )
 
-    # -----------------------
-    # Million
-    # Example:
-    # $25.6 million
-    # -----------------------
+    # ---------------------------------------
+    # Million text
+    # ---------------------------------------
+
     if "million" in value.lower():
 
-        number = float(
-            re.findall(r"\d+\.?\d*", value)[0]
-        )
+        number = extract_number(value)
+
+        if number is None:
+            return None
 
         return int(
-            number * 1_000_000 * fx_rate
+            number *
+            1_000_000 *
+            fx_rate
         )
 
-    # -----------------------
+    # ---------------------------------------
     # B notation
-    # Example:
-    # $96.900B
-    # -----------------------
-    if "B" in value:
+    # ---------------------------------------
 
-        number = float(
-            re.findall(r"\d+\.?\d*", value)[0]
-        )
+    if "B" in value_upper:
+
+        number = extract_number(value)
+
+        if number is None:
+            return None
 
         return int(
-            number * 1_000_000_000 * fx_rate
+            number *
+            1_000_000_000 *
+            fx_rate
         )
 
-    # -----------------------
+    # ---------------------------------------
     # M notation
-    # Example:
-    # $450M
-    # -----------------------
-    if "M" in value:
+    # ---------------------------------------
 
-        number = float(
-            re.findall(r"\d+\.?\d*", value)[0]
-        )
+    if "M" in value_upper:
+
+        number = extract_number(value)
+
+        if number is None:
+            return None
 
         return int(
-            number * 1_000_000 * fx_rate
+            number *
+            1_000_000 *
+            fx_rate
         )
 
-    # -----------------------
-    # Full Currency Amount
-    # Example:
-    # $1,785,000,000
-    # -----------------------
+    # ---------------------------------------
+    # Full currency amount
+    # ---------------------------------------
+
     cleaned = re.sub(
         r"[^\d.]",
         "",
@@ -149,7 +253,10 @@ def parse_revenue(value):
     )
 
     try:
-        return int(float(cleaned) * fx_rate)
+        return int(
+            float(cleaned) *
+            fx_rate
+        )
 
     except (ValueError, TypeError):
         return None

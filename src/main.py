@@ -1,14 +1,14 @@
 from pathlib import Path
 import json
-
 import pandas as pd
 
 from transformations.revenue_parser import parse_revenue
 from transformations.date_parser import parse_date
 from transformations.category_standardizer import standardize_category
+from transformations.company_matcher import (normalize_company_name,get_match_method)
 from transformations.company_matcher import normalize_company_name
 from transformations.company_enricher import get_company_size
-
+from transformations.revenue_parser import (parse_revenue,get_parse_status)
 
 # =====================================================
 # Project Paths
@@ -47,8 +47,12 @@ print("\n===== REVENUE PARSING =====\n")
 
 df["arr_usd"] = df["revenue"].apply(parse_revenue)
 
-df["parse_status"] = df["arr_usd"].apply(
-    lambda x: "SUCCESS" if pd.notna(x) else "MISSING"
+df["parse_status"] = df.apply(
+    lambda row: get_parse_status(
+        row["revenue"],
+        row["arr_usd"]
+    ),
+    axis=1
 )
 
 print("Revenue Parsing Complete")
@@ -122,14 +126,38 @@ print(
 
 print("\n===== COMPANY MATCHING =====\n")
 
+df["company_name_raw"] = df["company_name"]
+
+# Match method
+df["company_match_method"] = (
+    df["company_name_raw"]
+    .apply(get_match_method)
+)
+
+# Resolve to canonical name
 df["company_name"] = (
-    df["company_name"]
+    df["company_name_raw"]
     .apply(normalize_company_name)
 )
 
 print("Company Alias Mapping Applied")
 
+print("\n===== ALIAS MATCHES =====\n")
 
+alias_matches = (
+    df[
+        df["company_match_method"] == "MATCHED_ALIAS"
+    ][
+        [
+            "company_name_raw",
+            "company_name",
+            "company_match_method"
+        ]
+    ]
+    .drop_duplicates()
+)
+
+print(alias_matches)
 # =====================================================
 # Load Company Metadata
 # =====================================================
@@ -199,17 +227,43 @@ print(
 # Remaining Unmatched Companies
 # =====================================================
 
+# =====================================================
+# Remaining Unmatched Companies
+# =====================================================
+
 print("\n===== UNMATCHED COMPANIES =====\n")
 
-unmatched = sorted(
+unmatched_companies = (
     df[
         df["founded_year"].isna()
-    ]["company_name"]
-    .dropna()
-    .unique()
+    ][["company_name"]]
+    .drop_duplicates()
+    .sort_values("company_name")
 )
 
-print(unmatched)
+print(
+    unmatched_companies["company_name"]
+    .tolist()
+)
+
+# Export unmatched companies
+
+unmatched_output = (
+    PROJECT_ROOT
+    / "data"
+    / "gold"
+    / "unmatched_companies.csv"
+)
+
+unmatched_companies.to_csv(
+    unmatched_output,
+    index=False
+)
+
+print(
+    f"Unmatched companies saved to: "
+    f"{unmatched_output}"
+)
 
 
 # =====================================================

@@ -17,11 +17,18 @@ input_path = (
     / "ai_articles_enriched.csv"
 )
 
-output_path = (
+embeddings_path = (
     PROJECT_ROOT
     / "data"
     / "gold"
     / "ai_articles_with_embeddings.csv"
+)
+
+enriched_path = (
+    PROJECT_ROOT
+    / "data"
+    / "gold"
+    / "ai_articles_enriched.csv"
 )
 
 
@@ -74,12 +81,54 @@ print("Embeddings Generated")
 
 
 # ============================================
-# Save
+# Save Embedding Dataset
 # ============================================
 
 df.to_csv(
-    output_path,
+    embeddings_path,
     index=False
 )
 
-print(f"Saved: {output_path}")
+print(f"Saved: {embeddings_path}")
+
+
+# ============================================
+# Update Required Export
+# ============================================
+
+enriched_df = pd.read_csv(enriched_path)
+
+# Remove existing embedding column if present
+if "embedding" in enriched_df.columns:
+    enriched_df = enriched_df.drop(
+        columns=["embedding"]
+    )
+
+enriched_df = enriched_df.merge(
+    df[
+        [
+            "article_id",
+            "embedding"
+        ]
+    ],
+    on="article_id",
+    how="left"
+)
+
+enriched_df.to_csv(
+    enriched_path,
+    index=False
+)
+
+print(
+    f"Updated required export: {enriched_path}"
+)
+
+
+# ============================================
+# Validation
+# ============================================
+
+print("\n===== OUTPUT COLUMNS =====\n")
+
+print(enriched_df.columns.tolist())

@@ -11,3 +11,4 @@ torch
 duckdb
 
 tqdm
+pytest

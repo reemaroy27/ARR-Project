@@ -35,14 +35,14 @@ print(f"Rows Loaded: {len(df)}")
 
 # =====================================================
 # Filter AI Articles
-# Assignment Criteria:
-# 1. AI_ML category
-# 2. Published between 2022 and 2024
-# 3. ARR > 50M USD
 # =====================================================
 
 ai_articles = df[
-    (df["category_standardized"] == "AI_ML")
+    (
+        (df["category_standardized"] == "AI_ML")
+        |
+        (df["industry"] == "AI/ML")
+    )
     & (df["year"] >= 2022)
     & (df["year"] <= 2024)
     & (df["arr_usd"] > 50_000_000)
@@ -76,13 +76,29 @@ ai_articles = ai_articles[output_columns]
 
 
 # =====================================================
+# Match Assignment Contract
+# =====================================================
+
+ai_articles = ai_articles.rename(
+    columns={
+        "published_date_std": "published_date",
+        "category_standardized": "category"
+    }
+)
+
+
+# =====================================================
 # Sort Output
 # =====================================================
 
-ai_articles = ai_articles.sort_values(
-    by=["published_date_std", "arr_usd"],
-    ascending=[False, False]
-).reset_index(drop=True)
+ai_articles = (
+    ai_articles
+    .sort_values(
+        by=["published_date", "arr_usd"],
+        ascending=[False, False]
+    )
+    .reset_index(drop=True)
+)
 
 
 # =====================================================
@@ -108,12 +124,62 @@ print(
         [
             "article_id",
             "company_name",
-            "category_standardized",
-            "arr_usd"
+            "category",
+            "arr_usd",
+            "industry"
         ]
     ].head(10)
+)
+
+print("\n===== OUTPUT COLUMNS =====\n")
+
+print(
+    ai_articles.columns.tolist()
+)
+
+print("\n===== INDUSTRY DISTRIBUTION =====\n")
+
+print(
+    ai_articles["industry"]
+    .value_counts(dropna=False)
 )
 
 print(
     f"\nSaved: {output_path}"
 )
+
+# =====================================================
+# Schema Validation
+# =====================================================
+
+required_columns = [
+    "article_id",
+    "title",
+    "company_name",
+    "published_date",
+    "category",
+    "arr_usd",
+    "summary",
+    "url",
+    "industry",
+    "founded_year",
+    "headquarters",
+    "employee_count",
+    "is_public",
+    "stock_ticker",
+    "company_age",
+    "company_size_category"
+]
+
+missing_columns = [
+    col
+    for col in required_columns
+    if col not in ai_articles.columns
+]
+
+if missing_columns:
+    raise ValueError(
+        f"Missing columns: {missing_columns}"
+    )
+
+print("\nSchema Validation Passed")
